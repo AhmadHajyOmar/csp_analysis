@@ -1,0 +1,2 @@
+-15.844159 -15.844159 w en-US 1 [iPhone 13,iPhone 13 landscape,Desktop Safari,Desktop Safari (Windows)]
+-15.844159 -15.844159 c ar-SA 1 [Galaxy S9+,Galaxy S9+ landscape,Desktop Edge,Desktop Chrome,Desktop Edge (Mac)]
