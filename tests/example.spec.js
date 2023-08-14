@@ -25,12 +25,10 @@ let devNamesFirfox = new Array();
 let devNamesWebkit = new Array();
 let devNames = new Array();
 let subpagesWithMark = new Array();
-//console.log("CCCCCCCCCCCCCCCCCCCCCCCCCC")
-//console.log(JSON.stringify(playwright.chromium))
+
 
 getUA(devNames);
-//console.log(devNames)
-//devNames = devNames.slice(32,36);
+
 
 
 /*var array = [
@@ -104,7 +102,7 @@ getUA(devNames);
   ["40.4081906", "-3.6894398", "c", "AR;q=10", "2"],
   ["40.4081906", "-3.6894398", "c", "ab-YZ", "2"],
  
-]*/
+]
 
 var array = [
   ["-15.844159", "-47.914547", "w", "en-US", "1"],
@@ -145,6 +143,23 @@ var array = [
  
 ]
 
+
+*/
+var config = fs.readFileSync("./tests/config.txt", 'utf-8').split(/\r?\n/);
+var array = [];
+var devicesarray = [];
+for(var c of config){
+  var splitPoint = c.replace("]","")
+  splitPoint = splitPoint.split(" [")
+  console.log(splitPoint)
+
+  var devUA = splitPoint[1].split(",")
+  var conf = splitPoint[0].split(" ")
+  devicesarray.push(devUA)
+  array.push(conf)
+}
+
+
 const website = process.argv.splice(2);
 let choosedBrowsers = new Array();
 let usedBrowserToTest = new Array();
@@ -155,105 +170,101 @@ var choice = 0;
 let browserChoice = "";
 var op = ["Android", "iOS", "Windows", "Mac OS"]
 var acceptLanguage = "";
-
-var searchSubPages = false;
-let reachable = false;
+let pageName = website[0];
+const url = website[1];
+let headmode = true;
+if(website[2] === "hf"){
+  headmode = false;
+}
+console.log(website)
+const waitingTimeOp = website[3];
 
 
 (async() => {
-
-for(var e of array){
-  choosedBrowsers = new Array()
-  devNames = new Array();
-  usedBrowserToTest = new Array();
-  subPages = new Array();
-  lat = parseFloat(e[0])
-  lon = parseFloat(e[1])
-  choice = parseInt(e[4])
-  acceptLanguage = e[3]
-  browserChoice = e[2];
-  if (browserChoice === "c" && choice === 1){
-    usedBrowserToTest = ["Chrome"]
-  }else if (browserChoice === "w" && choice === 1){
-    usedBrowserToTest = ["WebKit", "Mobile Safari", "Safari"]
-  }else if (browserChoice === "f" && choice === 1){
-    usedBrowserToTest = ["Firefox"]
-  }else{
-    if(choice != 1){
-      usedBrowserToTest = ["Chrome", "Firefox", "WebKit"]
-    }
-  }
-
-  let pageName = website[1];
-  const url = website[2];
-  let headmode = true;
-  if(website[3] === "hf"){
-    headmode = false;
-  }
-
-  const waitingTimeOp = website[4]
-  
-  var dir = new String();
-  if(choice === 1){
-    dir = "("+ lat + " " + lon + ")-("+(usedBrowserToTest[0])+")-(" + choice+")";
-  }else{
-    if(choice === 2){
-      dir = "("+ lat + " " + lon + ")-(Non-Existing)-(" + choice+")";
+  let counter = 0;
+  var WebKit = await playwright.webkit.launch({headless: headmode});  
+  var Chrome = await playwright.chromium.launch({ headless: headmode});
+  var Firefox = await playwright.firefox.launch({ headless: headmode});  
+  let context;
+  let browser;
+  for(var e of array){
+    choosedBrowsers = new Array()
+    devNames = new Array();
+    usedBrowserToTest = new Array();
+    subPages = new Array();
+    lat = parseFloat(e[0])
+    lon = parseFloat(e[1])
+    choice = parseInt(e[4])
+    acceptLanguage = e[3]
+    browserChoice = e[2];
+    if (browserChoice === "c" && choice === 1){
+      usedBrowserToTest = ["Chrome", "Edge"]
+    }else if (browserChoice === "w" && choice === 1){
+      usedBrowserToTest = ["WebKit", "Mobile Safari", "Safari"]
+    }else if (browserChoice === "f" && choice === 1){
+      usedBrowserToTest = ["Firefox"]
     }else{
-      dir = "("+ lat + " " + lon + ")-(Malformed)-(" + choice+")";
-
-    }
-  }
-
-  console.log(dir)
-  
-  var homePageDB = new Array();
-  let uaNon = new Array()
-  
-
-  if(choice === 1){
-    searchSubPages = true;
-    if(usedBrowserToTest.includes("WebKit")){
-      for(let devW of devNamesWebkit){
-        devNames.push(devW)
+      if(choice != 1){
+        usedBrowserToTest = ["Chrome", "Edge", "Firefox", "WebKit"]
       }
-      choosedBrowsers.push(1)
     }
-    
-    if(usedBrowserToTest.includes("Chrome")){
-      for(let devC of devNamesChrome){
-        devNames.push(devC)
-      }
-      choosedBrowsers.push(2)
-    }
-    
-    if(usedBrowserToTest.includes("Firefox")){
-      for(let devF of devNamesFirfox){
-        devNames.push(devF)
-      }
-      choosedBrowsers.push(3)
-    }
-  }
 
-  if(choice === 2){
-    choosedBrowsers.push(1)
-    choosedBrowsers.push(2)
-    choosedBrowsers.push(3)
 
-    if(website[0] == 'h'){
-      console.log("ZZZZZZZZZZZZZZZZZZZZZ")
+
+    var dir = new String();
+    if(choice === 1){
+      dir = "("+ lat + " " + lon + ")-("+(usedBrowserToTest[0])+")-(" + choice+")";
+    }else{
+      if(choice === 2){
+        dir = "("+ lat + " " + lon + ")-(Non-Existing)-(" + choice+")";
+      }else{
+        if(choice === 3){
+          dir = "("+ lat + " " + lon + ")-(Malformed)-(" + choice+")";
+        }else{
+          dir = "("+ lat + " " + lon + ")-(Empty)-(" + choice+")";
+        }
+
+      }
+    }
+
+    console.log(dir)
+
+    var homePageDB = new Array();
+    let uaNon = new Array()
+
+
+    if(choice === 1){
       searchSubPages = true;
+      devNames = devicesarray[counter];
+      if(usedBrowserToTest.includes("WebKit")){
+        choosedBrowsers.push(1)
+
+      }
+      
+      if(usedBrowserToTest.includes("Chrome")){
+        choosedBrowsers.push(2)
+      }
+      
+      if(usedBrowserToTest.includes("Firefox")){
+        choosedBrowsers.push(3)
+      }
+
+    }
+
+    if(choice === 2){
+      choosedBrowsers.push(1)
+      choosedBrowsers.push(2)
+      choosedBrowsers.push(3)
+
       if(op.includes("Android")){
         for(let i = 0; i < 1;){
           let ua = getNoneExistedMobileDesktopUserAgent(["Android"])
-        
           if(!uaNon.includes(ua)){
             uaNon.push(ua)
             devNames.push(`${ua.split(/\s/g)[0].split("/")[0]}MBA`)
             i++;
           }
         }
-    
       }
       if(op.includes("iOS")){
         for(let i = 0; i < 1;){
@@ -264,8 +275,6 @@ for(var e of array){
             i++;
           }
         }
-   
-    
       }
       if(op.includes("Windows")){
         for(let i = 0; i < 1;){
@@ -301,50 +310,37 @@ for(var e of array){
           devNamesFile+= devNames[i]+"\n"
         }else{
           devNamesFile+= devNames[i]
-    
+
         }
       }
       fs.writeFileSync(`./tests/uagentsNoneExis.txt`, uagents)
       fs.writeFileSync(`./tests/uagentsNoneExisDevNames.txt`, devNamesFile)
-  
-  
     }
-    if(website[0] == 's'){
-      if(fs.existsSync(`./tests/uagentsNoneExis.txt`)){
-        uaNon = fs.readFileSync(`./tests/uagentsNoneExis.txt`, 'utf-8').split(/\r?\n/);
-  
-      }
-      if(fs.existsSync(`./tests/uagentsNoneExisDevNames.txt`)){
-        devNames = fs.readFileSync(`./tests/uagentsNoneExisDevNames.txt`, 'utf-8').split(/\r?\n/);
-  
-      }
+    let uamalFormed = new Array()
+    if(choice === 3){
+      choosedBrowsers.push(1)
+      choosedBrowsers.push(2)
+      choosedBrowsers.push(3)
+
+      uamalFormed.push("Mobile/1.0 (Android; 12.8)")
+      uamalFormed.push("Chrome/91.0 (Windows; 14.1)")
+      devNames.push(`MobileMalFormedMBA`)
+      devNames.push(`DesktopMAlFormedDBW`)
+
+      let uagents = new String()
+      let devNamesFile = new String()
+      uagents = "Mobile/1.0 (Android; 12.8)" + "\n" + "Chrome/91.0 (Windows; 14.1)"
+      devNamesFile = "Mobile-mal-formed" + "\n" + "Desktop-mal-formed"
+      fs.writeFileSync(`./tests/uagents-mal-formed.txt`, uagents)
+      fs.writeFileSync(`./tests/uagents-mal-formed-DevNames.txt`, devNamesFile)
     }
-    
-  }
-  let uamalFormed = new Array()
-  if(choice === 3){
-    searchSubPages = true;
-    choosedBrowsers.push(1)
-    choosedBrowsers.push(2)
-    choosedBrowsers.push(3)
 
-    uamalFormed.push("Mobile/1.0 (Android; 12.8)")
-    uamalFormed.push("Chrome/91.0 (Windows; 14.1)")
-    devNames.push(`MobileMalFormedMBA`)
-    devNames.push(`DesktopMAlFormedDBW`)
-  
-    let uagents = new String()
-    let devNamesFile = new String()
-    uagents = "Mobile/1.0 (Android; 12.8)" + "\n" + "Chrome/91.0 (Windows; 14.1)"
-    devNamesFile = "Mobile-mal-formed" + "\n" + "Desktop-mal-formed"
-    fs.writeFileSync(`./tests/uagents-mal-formed.txt`, uagents)
-    fs.writeFileSync(`./tests/uagents-mal-formed-DevNames.txt`, devNamesFile)
-
-   
-  }
-  //console.log(uaNon)
-  //usedBrowserToTest.pushe(2)
-
+    if(choice === 4){
+      choosedBrowsers.push(1)
+      choosedBrowsers.push(2)
+      choosedBrowsers.push(3)
+      devNames = ['Galaxy S9+']
+    }
 
     if(!fs.existsSync(`./cspHeaders-${acceptLanguage}-${dir}`)){
       fs.mkdirSync(path.join("./", `cspHeaders-${acceptLanguage}-${dir}`));
@@ -353,71 +349,86 @@ for(var e of array){
     if(!fs.existsSync(`./UserAgents-${acceptLanguage}-${dir}`)){
       fs.mkdirSync(path.join("./", `UserAgents-${acceptLanguage}-${dir}`));
     }
-  
 
-    //console.log(devNames)
     for(let q = 0; q < devNames.length; q++) {
-      //console.log("LOOK")
       console.log(devNames[q])
       let dev = devNames[q]
       let found1 = false;
-     
+      
       for(let i = 0; i < choosedBrowsers.length; i++){
         dev = devNames[q]
-        //console.log(dev)
-        //console.log(uaNon[q])
-        //console.log(choosedBrowsers[i])
         let found2 = false;
         let chBro = choosedBrowsers[i]
-       
-        //console.log(uaNon[q])
-        //console.log(chBro)
 
-        if((choice === 2 && ((uaNon[q].includes("Android") && (chBro === 2 || chBro === 3)) || (uaNon[q].includes("Windows;") && (chBro === 2|| chBro === 3) ) || (uaNon[q].includes("Mobile; iOS") && (chBro === 1)) || (uaNon[q].includes("macOS;") && (chBro === 1) ) )) || choice === 1 || choice === 3){
+        if((choice === 2 && ((uaNon[q].includes("Android") && (chBro === 2 || chBro === 3)) || (uaNon[q].includes("Windows;") && (chBro === 2|| chBro === 3) ) || (uaNon[q].includes("Mobile; iOS") && (chBro === 1)) || (uaNon[q].includes("macOS;") && (chBro === 1) ) )) || choice === 1 || choice === 3 || choice === 4){
           homePageDB.push(url);
-          //console.log(url)
-         
-
-          //let devStr = JSON.stringify(dev);
-          //console.log(dev)
-          //console.log(devStr)
-          //devStr = devStr.replace("}"," }")
-      
-          //console.log("KKKKKKKKK")
-          //console.log(devStr)
-          //dev = JSON.parse(devStr);
-          //console.log(dev)
-          
-          //let dev = devNames[i];
-          let browser;
           let broserName;
           let version;
           if(chBro === 1){
-            browser = await playwright.webkit.launch({headless: headmode,
-              timeout: 30 * 1000});  
+            browser = WebKit;
             broserName = "WebKit"
           }
           if(chBro === 2){
-            browser = await playwright.chromium.launch({ headless: headmode,
-              timeout: 30 * 1000});
+            browser = Chrome;
             broserName = "Chrome"  
           }
-         
           if(chBro === 3){
-
-            browser = await playwright.firefox.launch({ headless: headmode,
-              timeout: 30 * 1000});  
+            browser = Firefox;  
             broserName = "Firefox"  
-            
           }
     
           let model_name = dev;
           if(choice === 1){
-            dev = devices[dev];
+
+            if(dev === "Desktop Chrome HiDPI (Linux)"){//DONE
+              dev = devices["Desktop Chrome HiDPI"];
+              dev.userAgent  = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36"
+            }else if (dev === "Desktop Chrome (Linux)"){//DONE
+              dev = devices["Desktop Chrome"];
+              dev.userAgent  = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36"
+            }else if (dev === "Desktop Edge HiDPI (Linux)"){//DONE
+              dev = devices["Desktop Edge HiDPI"];
+              dev.userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36 Edg/112.0.5615.29"
+            }else if (dev === "Desktop Edge (Linux)"){//DONE
+              dev = devices["Desktop Edge"];
+              dev.userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36 Edg/112.0.5615.29"
+            }else if (dev === "Desktop Chrome HiDPI (Mac)"){//DONE
+              dev = devices["Desktop Chrome HiDPI"];
+              dev.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36"
+            }else if (dev === "Desktop Chrome (Mac)"){//DONE
+              dev = devices["Desktop Chrome"];
+              dev.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36"
+            }else if (dev === "Desktop Edge HiDPI (Mac)"){
+              dev = devices["Desktop Edge HiDPI"];
+              dev.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36 Edg/112.0.5615.29"
+            }else if (dev === "Desktop Edge (Mac)"){
+              dev = devices["Desktop Edge"];
+              dev.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.29 Safari/537.36 Edg/112.0.5615.29"
+            }else if (dev === "Desktop Safari (Linux)"){
+              dev = devices["Desktop Safari"];
+              dev.userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15"
+            }else if (dev === "Desktop Safari (Windows)"){
+              dev = devices["Desktop Safari"];
+              dev.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15"
+            }else if (dev === "Desktop Firefox HiDPI (Linux)"){
+              dev = devices["Desktop Firefox HiDPI"];
+              dev.userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:111.0) Gecko/20100101 Firefox/111.0"
+            }else if (dev === "Desktop Firefox (Linux)"){
+              dev = devices["Desktop Firefox"];
+              dev.userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:111.0) Gecko/20100101 Firefox/111.0"
+            }else if (dev === "Desktop Firefox HiDPI (Mac)"){
+              dev = devices["Desktop Firefox HiDPI"];
+              dev.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:111.0) Gecko/20100101 Firefox/111.0"
+            }else if (dev === "Desktop Firefox (Mac)"){
+              dev = devices["Desktop Firefox"];
+              dev.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:111.0) Gecko/20100101 Firefox/111.0"
+            }else{
+              dev = devices[dev]
+            }
           }
           if(choice === 2){
             if(dev.includes("MBA")){
-  
+
               dev = {
                 name: model_name,
                 userAgent: uaNon[q],
@@ -433,10 +444,10 @@ for(var e of array){
                 browserVersion: browser.version(),
               };
               devices[model_name] = dev
-             
+              
             
             }else if(dev.includes("MBI")){
-  
+
               dev = {
                 name: model_name,
                 userAgent: uaNon[q],
@@ -452,10 +463,10 @@ for(var e of array){
                 browserVersion: browser.version(),
               };
               devices[model_name] = dev
-             
+              
             
             }else if(dev.includes("DBW")){
-  
+
               dev = {
                 name: model_name,
                 userAgent: uaNon[q],
@@ -474,7 +485,7 @@ for(var e of array){
           
             
             }else if(dev.includes("DBM")){
-  
+
               dev = {
                 name: model_name,
                 userAgent: uaNon[q],
@@ -490,7 +501,7 @@ for(var e of array){
                 browserVersion: browser.version(),
               };
               devices[model_name] = dev
-           
+            
             
             }
           }
@@ -511,15 +522,17 @@ for(var e of array){
             };
             devices[model_name] = dev
           }
-          let context;
-          if(choice === 1){
+          if(choice === 4){
+            dev = devices[dev]
+            dev.userAgent = "";
+          }
+          if(choice === 1 || choice === 4){
             if(chBro === 3){
               let devStr = JSON.stringify(dev);
               devStr = devStr.replace("\"isMobile\":true,", "")
               devStr = devStr.replace("\"isMobile\":false,", "")
               dev = JSON.parse(devStr);
             }
-
             context = await browser.newContext({
               ...dev,
               premissions: ['geolocation'],
@@ -538,28 +551,16 @@ for(var e of array){
           }
       
           let page = await context.newPage();
-          
-          //console.log(uaParser(dev.userAgent))
           let csp = new Array();
           let headers = new Array();
           let allCSP = new Array();
           let finalheaders = new Array();
-          //let collectResHeaders = false;
-          //const getUA = await page.evaluate(() => navigator.userAgent);
           const userAgentInfo= uaParser(dev.userAgent);
-          //console.log(userAgentInfo)
-         
-          //console.log("IIIIIIIIIIIIIII")
-          //console.log(userAgentInfo)
           let browserversion = browser.version();
-          /*if(chBro === 2) {
-            browserversion = version.product.split("/")[1]
-          }*/
-          //console.log(page_name)
           let requestHeadersArray = new Array();
           let failed = "false";
         
-         
+          
           try{
             if(!fs.existsSync(`./cspHeaders-${acceptLanguage}-${dir}/${pageName}`)){
               fs.mkdirSync(path.join(`./cspHeaders-${acceptLanguage}-${dir}/`, `${pageName}`));
@@ -575,13 +576,8 @@ for(var e of array){
 
             try {
               let os = userAgentInfo.os.name
-             
-              //console.log(os)
-
-              //console.log(os)
               op.push(os)
               let os_version = userAgentInfo.os.version;
-              //console.log(choice)
               if(choice === 2){
                 if((uaNon[q].includes("Mobile; iOS") && (chBro === 1))){
                   os = "iOS"
@@ -600,7 +596,7 @@ for(var e of array){
               if (choice === 1 && usedBrowserToTest.includes("Firefox")){
                   pass = true;
               }
-              if(op.includes(os) && (usedBrowserToTest.includes(userAgentInfo.browser.name) || pass === true || (userAgentInfo.browser.name === "Android Browser" && usedBrowserToTest.includes(userAgentInfo.engine.name))) || choice === 2 || choice === 3) {
+              if(op.includes(os) && (usedBrowserToTest.includes(userAgentInfo.browser.name) || pass === true || (userAgentInfo.browser.name === "Android Browser" && usedBrowserToTest.includes(userAgentInfo.engine.name))) || choice === 2 || choice === 3 || choice === 4) {
 
                 if(response.request().resourceType() == 'document'){
                   let requestAllHeaders = response.request().headers();
@@ -608,19 +604,13 @@ for(var e of array){
 
                   let allHeaders = await response.headers();
                   let href = await response.url();
-                  //console.log(href)
                   if(href === url || href === `${url}/`){
-                    //console.log(allHeaders)
                     let headers_arr = parser.cspParser(allHeaders);
-                    //console.log(allHeaders)
-                    //console.log(headers_arr)
                     let headers = parser.cspParser_GetAllHeaders(headers_arr)
-                    //console.log(headers)
                     allCSP.push(headers_arr)
                     csp = parser.getCSP_Policy(csp, headers, headers_arr);
                   }
-                 
-                  //console.log(csp)
+                  
     
                   if(model_name.endsWith("landscape")) {
                     model_name = model_name.substring(0,model_name.indexOf(" landscape"))
@@ -639,7 +629,6 @@ for(var e of array){
                     }
                     json[key] = value;
                   } 
-                  //console.log(json)
                   json['url'] = url
                   fs.writeFileSync(`./cspHeaders-${acceptLanguage}-${dir}/${pageName}/${fileName}`, JSON.stringify(json))
 
@@ -653,7 +642,6 @@ for(var e of array){
                 }               
               }
             } catch (error) {
-              console.log("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")
               console.error(error);
             }
             // if only one csp is safe then the page deploy a safe csp //page level
@@ -669,197 +657,29 @@ for(var e of array){
             }
             reachable = true;
           }catch (e) {
-            //console.log(e);
-            ``
-            /*if(!fs.existsSync(`./notReachableLinks-${acceptLanguage}-${dir}/${pageName}`)){
-              fs.mkdirSync(path.join(`./notReachableLinks-${acceptLanguage}-${dir}/`, `${pageName}`));
-            }*/
             const os = userAgentInfo.os.name
             const os_version = userAgentInfo.os.version;
-            
             let fileName = `csp_${model_name}_${broserName}_${browserversion}_${os}_${dev.viewport.height}_${dev.viewport.width}_${os_version}_${pageName}.json`
             let json = {}
             json["Not Reachable webpage"] = pageName
             json["visited links"] = url
             reachable = false
           }
-          //await waitingTime(2000)
-          var index = 0
-          var index_ = 0
-          var urlIsThere = false
-          var index_url = 0
-          var paths = new Array();
-          //console.log(subPages)
-          console.log(searchSubPages)
-          console.log(reachable)
-          /*if(searchSubPages && reachable) {
-            searchSubPages = false;
-            let flage_homePage = true;
-            let flage_subpages = true;
-            let line = new String()
-            for(let i = 0; i < subPages.length; i++) {
-              if(subPages[i][0] === url) {
-                urlIsThere = true
-                index_url = i
-              }
-            }
-            //console.log(urlIsThere)
-            if(urlIsThere){
-              //console.log("Is there !!!")
-              //console.log(url)
-            }
 
-            if(urlIsThere){
-              flage_subpages = false;
-              if(flage_homePage){
-                flage_homePage = false;
-                line += url + " "
-              }
-
-              for(let spe of subPages) {
-                for(let i = 1; i < spe.length; i++){
-                  if(!subPagesToTest.includes(spe[i])){
-                    subPagesToTest.push(spe[i])
-                    if(i != spe.length - 1){
-                      line += `${spe[i]}Ahmad${page_name}` + " "
-                    }else {
-                      line += `${spe[i]}Ahmad${page_name}`
-                    }
-                  }
-                }
-              }
-              
-              line += "\n"
-    
-            } else {
-              if(flage_subpages){
-                flage_subpages = false;
-                if(flage_homePage){
-                  flage_homePage = false;
-                  line += `${url}Ahmad${pageName}` + " "
-                }
-                let links;
-                try{
-                  links = await page.evaluate(() => {
-                    return Array.from(document.links).map(item => item.href);
-                  });
-                  console.log(model_name)
-                  //console.log(links)
-                  if(links.length > 0){
-                    for(var u of links) {
-                      if(u.includes("://") && u.split("://").length > 1){
-                        const url = new URL(u);
-                        if( !paths.includes(url.pathname) ) {
-                          paths.push(url.pathname);
-                        }
-                      }
-                      
-                      //console.log(u)
-                      //console.log(url.pathname)
-                    }
-                    console.log(links)
-                    console.log(links.length)
-                    console.log(paths)
-                    console.log(paths.length)
-
-                    if(paths.length <= 4) {
-                      console.log("OR HIERRRRRRRRRRRRRRRRRRRRRRRRR")
-                      let counter = 0;
-    
-                      for(let i = 0; i < paths.length ; i++) {
-                        for(let j = 0; j < links.length; j++) {
-                          if(links[j].includes(paths[i])){
-                            if(!subPagesToTest.includes(links[j])){
-                              subPagesToTest.push(links[j])
-                              if (i == paths.length - 1){
-                                line += `${links[j]}Ahmad${page_name}`
-                              }else{
-                                line += `${links[j]}Ahmad${page_name}` + " "
-                              }
-                              break;
-                            }
-                          } 
-                        }
-                      }
-                      line += "\n"
-                    }else {
-                      console.log("HIER HIIIIIIIIIEEEEEEEEEEEEEER!!!!")
-                      let used_paths = new Array()
-                      for(let i = 0; i < 5 ; i++) {
-                        for(let j = 0; j < links.length; j++) {
-                          if(links[j].includes(paths[i])){
-                            if(!subPagesToTest.includes(links[j])){
-                              console.log(url)
-                              subPagesToTest.push(links[j])
-                              if (i == 4){
-                                line += `${links[j]}Ahmad${page_name}` 
-                              }else{
-                                line += `${links[j]}Ahmad${page_name}` + " "
-                              }
-                              break;
-                            }
-                          }
-                        }
-                      }
-                      line += "\n"
-                    }
-                    fs.writeFileSync(`./tests/subpages.txt`, line)
-                  }
-
-                }catch(err){
-                  console.log(err)
-                }
-                
-               
-              } 
-            }	
-          }*/
-        
-          await context.close();
-          await browser.close();
         }
-       
-       
-
       } 
-
       if(found1){
         break;
-      }     
+      }   
     }
-  /*
-  switch(website.length) {
-    
-    case 3:
-  
-      if(website[0] == 'h'){
-        
-        console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
-        console.log(uaNon)
-        run(url, true, choosedBrowsers, pageName, url, uamalFormed, uaNon);
-      }
-  
-      if(website[0] == 's'){
-        run(url, false, choosedBrowsers, pageName, url, uamalFormed, uaNon);
-      }
-    break;
-    default:
-      console.log("please read the follosing instructions :")
-      console.log("Step 1 : use the following command to visit all targeted homepages and extract subpages. ")
-      console.log(" node ./tests/example.spec.js h")
-      console.log("Step 2 : use the following command to visit all subpages.")
-      console.log(" node ./tests/example.spec.js s")
+    counter++;
   }
-  */
-
-
-}
+  await context.close();
+  await browser.close(); 
+  await WebKit.close();
+  await Firefox.close();
+  await Chrome.close();
 })(); 
-
-function run(urls, searchSubPages, choosedBrowsers, pageName, url, uamalFormed, uaNon) {
-
-
-}
 
 
 

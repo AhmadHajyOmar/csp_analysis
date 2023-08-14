@@ -1,5 +1,5 @@
-https://www.google.com.com
-https://www.facebook.com.com
-https://www.a-msedge.net.com
-https://www.amazonaws.com.com
-https://www.microsoft.com.com
+https://www.google.com
+https://www.facebook.com
+https://www.a-msedge.net
+https://www.amazonaws.com
+https://www.microsoft.com

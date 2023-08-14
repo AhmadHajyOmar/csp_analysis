@@ -36,9 +36,10 @@ do{
         console.log("1: existed ua")
         console.log("2: not existed ua")
         console.log("3: mal-formed ua")
+        console.log("4: empty ua")
     
         uaOption = prompt("What is your choice? ")
-        if(uaOption === '1' || uaOption === '2' || uaOption === '3'){
+        if(uaOption === '1' || uaOption === '2' || uaOption === '3' || uaOption === '4'){
             break;
         }
     }
@@ -64,12 +65,14 @@ do{
         }
         break;
     }
+
     config += latitude + " " + longitude + " " + browser + " " + accLanguage + " " + uaOption + " [" + uaArray + "]\n"
     console.log("your actual configurations are :")
     console.log(config)
     input = prompt("Another config? Type (y|Y for yes)");
 
 }while(input === 'y' || input ==="Y")
+config = config.replace(/\n+$/, '');
 
 fs.writeFileSync(`./tests/config.txt`, config)
 
@@ -295,6 +298,7 @@ function getUAforWebkit(uaArray){
                     console.log("UA array : " + uaArray)
                 }
                 break;
+      
             }
         }
         more = prompt("Do you want to add more UAs? (Type y|Y for yes)")
@@ -384,8 +388,6 @@ function getUAforFirefox(uaArray){
                     console.log("UA array : " + uaArray)
                 }
                 break;
-
-
 
                 case 9 : {
                     if(!uaArray.includes('Desktop Firefox HiDPI (Mac)')){
