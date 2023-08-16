@@ -112,6 +112,7 @@ var array = [
   ["40.4081906", "-3.6894398", "w", "ar-SA", "1"],
   ["40.4081906", "-3.6894398", "w", "AR;q=10", "1"],
   ["40.4081906", "-3.6894398", "w", "ab-YZ", "1"],
+  
   ["-15.844159", "-47.914547", "f", "en-US", "1"],
   ["40.4081906", "78.5004047", "f", "en-US", "1"],
   ["40.4081906", "-3.6894398", "f", "en-US", "1"],
@@ -346,6 +347,10 @@ const waitingTimeOp = website[3];
       fs.mkdirSync(path.join("./", `cspHeaders-${acceptLanguage}-${dir}`));
     }
 
+    if(!fs.existsSync(`./cspHeadersMeta-${acceptLanguage}-${dir}`)){
+      fs.mkdirSync(path.join("./", `cspHeadersMeta-${acceptLanguage}-${dir}`));
+    }
+
     if(!fs.existsSync(`./UserAgents-${acceptLanguage}-${dir}`)){
       fs.mkdirSync(path.join("./", `UserAgents-${acceptLanguage}-${dir}`));
     }
@@ -565,6 +570,9 @@ const waitingTimeOp = website[3];
             if(!fs.existsSync(`./cspHeaders-${acceptLanguage}-${dir}/${pageName}`)){
               fs.mkdirSync(path.join(`./cspHeaders-${acceptLanguage}-${dir}/`, `${pageName}`));
             }
+            if(!fs.existsSync(`./cspHeadersMeta-${acceptLanguage}-${dir}/${pageName}`)){
+              fs.mkdirSync(path.join(`./cspHeadersMeta-${acceptLanguage}-${dir}/`, `${pageName}`));
+            }
             if(!fs.existsSync(`./UserAgents-${acceptLanguage}-${dir}/${pageName}`)){
               fs.mkdirSync(path.join(`./UserAgents-${acceptLanguage}-${dir}/`, `${pageName}`));
             }
@@ -572,6 +580,8 @@ const waitingTimeOp = website[3];
             console.log(err)
           }
           console.log(url)
+          let FN = new String();
+
           await page.on("response", async (response) => {
 
             try {
@@ -618,6 +628,7 @@ const waitingTimeOp = website[3];
 
                   let fileName = `csp_${model_name}_${broserName}_${browserversion}_${os}_${dev.viewport.height}_${dev.viewport.width}_${os_version}_${pageName}.json`
                   fn = fileName;
+                  FN = fileName;
                   let json = {};
                   let counterCSP = 1;
                   for(let i = 0; i < csp.length; i++) {
@@ -656,6 +667,26 @@ const waitingTimeOp = website[3];
               await waitingTime(time)
             }
             reachable = true;
+
+
+
+            const cspMeta = await page.evaluate(() => {
+              const cspMeta = document.querySelector("meta[http-equiv='Content-Security-Policy']");
+              if (cspMeta) {
+                  return cspMeta.getAttribute("content");
+              } else {
+                  return "No CSP found";
+              }
+          });
+          if(cspMeta != "No CSP found"){
+            fs.writeFile(`./cspHeadersMeta-${acceptLanguage}-${dir}/${pageName}/${FN}`, JSON.stringify({ "content-security-policy": cspMeta }), function (err) {
+              if (err) throw err;
+          });
+          }
+
+          
+           
+
           }catch (e) {
             const os = userAgentInfo.os.name
             const os_version = userAgentInfo.os.version;
